@@ -1,0 +1,188 @@
+><!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Text-to-Speech Reader</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f0f8ff;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      padding: 10px; /* Added padding for better mobile experience */
+      box-sizing: border-box; /* Ensures padding is included in width */
+    }
+
+    .container {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      width: 100%; /* Changed to 100% for mobile responsiveness */
+      max-width: 600px; /* Adjusted max-width for smaller screens */
+      overflow: hidden;
+    }
+
+    h1 {
+      font-size: 24px;
+      margin-bottom: 10px; /* Reduced margin for smaller screens */
+    }
+
+    h5, h6 {
+      font-size: 16px; /* Adjusted font size for mobile */
+      margin: 5px 0; /* Reduced margin for smaller screens */
+    }
+
+    textarea {
+      width: 100%;
+      height: 200px; /* Reduced height for better fit */
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      margin-bottom: 10px; /* Reduced margin for smaller screens */
+      font-size: 16px;
+      line-height: 1.5;
+      resize: none;
+    }
+
+    select {
+      padding: 10px;
+      margin-top: 10px;
+      margin-bottom: 10px;
+      font-size: 16px;
+      width: 100%; /* Made select box full width */
+    }
+
+    .controls {
+      margin-top: 10px; /* Reduced margin for smaller screens */
+      display: flex;
+      flex-direction: column; /* Stack buttons vertically on small screens */
+      align-items: center;
+    }
+
+    button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px 20px; /* Reduced padding for smaller screens */
+      cursor: pointer;
+      font-size: 16px;
+      border-radius: 5px;
+      margin: 5px 0; /* Stack buttons with reduced margin */
+      width: 100%; /* Made buttons full width */
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    .footer-paragraph {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 14px; /* Adjusted font size for mobile */
+      color: #555;
+    }
+
+    .highlight {
+      background-color: yellow;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>AI Reader</h1>
+    <h5>Powered by BRDL</h5>
+    <textarea id="text-input" placeholder="Paste your text here..."></textarea><br>
+    
+    <label for="voice-select">Choose Voice Type:</label>
+    <select id="voice-select">
+      <option value="female">English (indian)</option>
+      <option value="female-indian">Best Indian</option>
+      <option value="enthusiastic">English 2</option>
+    </select>
+
+    <label for="speed-select">Reading Speed:</label>
+    <select id="speed-select">
+      <option value="1">1x</option>
+      <option value="0.5">0.5x</option>
+      <option value="1.5">1.5x</option>
+      <option value="2">2x</option>
+      <option value="2.5">2.5x</option>
+    </select>
+  </div>
+
+  <div class="controls">
+    <button onclick="speakText()">Read Text</button>
+  </div>
+
+  <p class="footer-paragraph">BRDL AI2</p>
+
+  <script>
+    const textInput = document.getElementById('text-input');
+    const voiceSelect = document.getElementById('voice-select');
+    const speedSelect = document.getElementById('speed-select');
+    let voices = [];
+    let currentChunkIndex = 0;
+    const maxChunkLength = 500; // Maximum characters per chunk
+
+    const customVoices = {
+      "female": {name: "Google UK English Female", lang: "en-GB"},
+      "female-indian": {name: "Google Indian English Female", lang: "en-IN"},
+      "enthusiastic": {name: "Google US English Male", lang: "en-US"}
+    };
+
+    function loadVoices() {
+      voices = window.speechSynthesis.getVoices();
+    }
+
+    function speakText() {
+      if (speechSynthesis.speaking) {
+        window.speechSynthesis.cancel();
+      }
+
+      const text = textInput.value;
+      if (text.trim() === '') return;
+
+      let chunks = [];
+      for (let i = 0; i < text.length; i += maxChunkLength) {
+        chunks.push(text.substring(i, i + maxChunkLength));
+      }
+
+      currentChunkIndex = 0;
+      speakChunk(chunks);
+    }
+
+    function speakChunk(chunks) {
+      if (currentChunkIndex < chunks.length) {
+        const chunk = chunks[currentChunkIndex++];
+        const speechSynthesisUtterance = new SpeechSynthesisUtterance(chunk);
+        const selectedVoiceType = voiceSelect.value;
+        const selectedVoice = customVoices[selectedVoiceType];
+        const matchedVoice = voices.find(voice => voice.name === selectedVoice.name);
+
+        if (matchedVoice) {
+          speechSynthesisUtterance.voice = matchedVoice;
+        }
+        speechSynthesisUtterance.lang = selectedVoice.lang;
+        speechSynthesisUtterance.rate = parseFloat(speedSelect.value);
+
+        speechSynthesisUtterance.onend = () => {
+          speakChunk(chunks); // Speak the next chunk when the current one ends
+        };
+
+        window.speechSynthesis.speak(speechSynthesisUtterance);
+      }
+    }
+
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+    window.onload = loadVoices;
+  </script>
+  <h5>BRDL AI2—your ultimate AI-powered educational tool, coming soon to the PlayStore. </h5>
+</body>
+</html>
